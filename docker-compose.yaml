@@ -17,6 +17,8 @@ services:
       - TZ=Australia/Melbourne
     networks:
       - node-red-net
+    ports:
+      - "1883:1883"
     volumes:
       - ./data/mosquitto:/mosquitto
 
