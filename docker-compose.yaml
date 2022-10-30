@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  node-red:
+    image: nodered/node-red:latest
+    environment:
+      - TZ=Australia/Melbourne
+    ports:
+      - "1880:1880"
+    networks:
+      - node-red-net
+    volumes:
+      - ./data/node-red:/data
+  mqtt:
+    image: eclipse-mosquitto:latest
+    environment:
+      - TZ=Australia/Melbourne
+    networks:
+      - node-red-net
+    volumes:
+      - ./data/mosquitto:/mosquitto
+
+networks:
+  node-red-net:
