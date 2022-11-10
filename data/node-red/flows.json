@@ -150,7 +150,7 @@
     {
         "id": "913003a23650727b",
         "type": "ui_group",
-        "name": "Debug",
+        "name": "Message Log",
         "tab": "5b25f879b1a0210d",
         "order": 2,
         "disp": true,
@@ -191,7 +191,7 @@
     {
         "id": "098d1b550922726c",
         "type": "ui_group",
-        "name": "Last eye positions",
+        "name": "Last face detection",
         "tab": "5b25f879b1a0210d",
         "order": 1,
         "disp": true,
@@ -211,6 +211,17 @@
         "className": ""
     },
     {
+        "id": "ea76730aa3078f89",
+        "type": "ui_group",
+        "name": "Message Inspector",
+        "tab": "5b25f879b1a0210d",
+        "order": 3,
+        "disp": true,
+        "width": "10",
+        "collapse": true,
+        "className": ""
+    },
+    {
         "id": "a20398b6ea765c96",
         "type": "mqtt in",
         "z": "79285b2d3137a49f",
@@ -223,11 +234,11 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 280,
+        "x": 110,
+        "y": 500,
         "wires": [
             [
-                "121a436a81925cc6"
+                "4c84a438164f5a8e"
             ]
         ]
     },
@@ -238,12 +249,12 @@
         "group": "913003a23650727b",
         "name": "All Recent Messages",
         "order": 3,
-        "width": "16",
-        "height": "15",
+        "width": "20",
+        "height": "20",
         "columns": [
             {
                 "field": "title",
-                "title": "title",
+                "title": "Title",
                 "width": "",
                 "align": "left",
                 "formatter": "plaintext",
@@ -252,7 +263,27 @@
                 }
             },
             {
-                "field": "time",
+                "field": "category",
+                "title": "Category",
+                "width": "",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "component",
+                "title": "Component",
+                "width": "",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "Time",
                 "title": "timestamp",
                 "width": "",
                 "align": "left",
@@ -262,11 +293,15 @@
                 }
             }
         ],
-        "outputs": 0,
-        "cts": false,
-        "x": 860,
-        "y": 660,
-        "wires": []
+        "outputs": 1,
+        "cts": true,
+        "x": 1140,
+        "y": 940,
+        "wires": [
+            [
+                "6c92509e728915e0"
+            ]
+        ]
     },
     {
         "id": "ec10e1e53415045d",
@@ -288,8 +323,8 @@
         "reduceInit": "",
         "reduceInitType": "num",
         "reduceFixup": "",
-        "x": 330,
-        "y": 480,
+        "x": 590,
+        "y": 760,
         "wires": [
             [
                 "f3718578e6dcf20d"
@@ -307,8 +342,8 @@
         "interval": 10,
         "allowEmptySequence": false,
         "topics": [],
-        "x": 490,
-        "y": 480,
+        "x": 770,
+        "y": 760,
         "wires": [
             [
                 "6fb3e97ecec24d20"
@@ -335,8 +370,8 @@
         "reduceInit": "",
         "reduceInitType": "",
         "reduceFixup": "",
-        "x": 630,
-        "y": 480,
+        "x": 930,
+        "y": 760,
         "wires": [
             [
                 "de7e06cd21e106e5"
@@ -354,8 +389,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 660,
+        "x": 850,
+        "y": 940,
         "wires": [
             [
                 "f3718578e6dcf20d",
@@ -375,11 +410,11 @@
         "finalize": "",
         "libs": [],
         "x": 490,
-        "y": 340,
+        "y": 620,
         "wires": [
             [
-                "ec10e1e53415045d",
-                "d0951918c362d0f2"
+                "d0951918c362d0f2",
+                "ec10e1e53415045d"
             ]
         ]
     },
@@ -396,8 +431,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 150,
-        "y": 100,
+        "x": 170,
+        "y": 260,
         "wires": [
             [
                 "58310ff8a85668a2"
@@ -415,13 +450,13 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 440,
-        "y": 100,
+        "x": 520,
+        "y": 260,
         "wires": [
             [
-                "4c84a438164f5a8e",
                 "e9203b185c39217b",
-                "1286627df8ba56bd"
+                "1286627df8ba56bd",
+                "64ce99a850e905e0"
             ]
         ]
     },
@@ -445,7 +480,7 @@
         "to": "",
         "reg": false,
         "x": 490,
-        "y": 220,
+        "y": 500,
         "wires": [
             [
                 "121a436a81925cc6"
@@ -469,8 +504,8 @@
         "topic": "",
         "payload": "midpoint_x = 19 | midpoint_y = 12",
         "payloadType": "str",
-        "x": 90,
-        "y": 40,
+        "x": 190,
+        "y": 200,
         "wires": [
             [
                 "58310ff8a85668a2"
@@ -482,7 +517,7 @@
         "type": "ui_text",
         "z": "79285b2d3137a49f",
         "group": "098d1b550922726c",
-        "order": 0,
+        "order": 2,
         "width": 0,
         "height": 0,
         "name": "",
@@ -490,8 +525,8 @@
         "format": "{{msg.payload.x}}",
         "layout": "row-left",
         "className": "",
-        "x": 820,
-        "y": 80,
+        "x": 840,
+        "y": 240,
         "wires": []
     },
     {
@@ -499,7 +534,7 @@
         "type": "ui_text",
         "z": "79285b2d3137a49f",
         "group": "098d1b550922726c",
-        "order": 0,
+        "order": 3,
         "width": 0,
         "height": 0,
         "name": "",
@@ -507,48 +542,27 @@
         "format": "{{msg.payload.y}}",
         "layout": "row-left",
         "className": "",
-        "x": 820,
-        "y": 120,
+        "x": 840,
+        "y": 280,
         "wires": []
-    },
-    {
-        "id": "a7b19b34be13f10d",
-        "type": "ui_template",
-        "z": "79285b2d3137a49f",
-        "group": "098d1b550922726c",
-        "name": "",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "format": "<img src=\"https://images-ext-2.discordapp.net/external/Ghdd067PB8qYpcJgz7H7Mu1vkylWq1Ddn9fTS6ko_Y4/https/cdn-learn.adafruit.com/guides/images/000/001/534/medium800/eyes-800x800.jpg\" />",
-        "storeOutMessages": true,
-        "fwdInMessages": true,
-        "resendOnRefresh": true,
-        "templateScope": "local",
-        "className": "",
-        "x": 820,
-        "y": 160,
-        "wires": [
-            []
-        ]
     },
     {
         "id": "ef61de68f8dd82ec",
         "type": "ui_template",
         "z": "79285b2d3137a49f",
-        "group": "913003a23650727b",
+        "group": "ea76730aa3078f89",
         "name": "",
         "order": 2,
-        "width": 0,
-        "height": 0,
+        "width": "10",
+        "height": "10",
         "format": "<h3>Latest Message</h3>\n<pre>\n<code ng-bind-html=\"msg.debug\"></code>\n</pre>",
         "storeOutMessages": true,
         "fwdInMessages": true,
         "resendOnRefresh": true,
         "templateScope": "local",
         "className": "",
-        "x": 920,
-        "y": 340,
+        "x": 1000,
+        "y": 620,
         "wires": [
             []
         ]
@@ -564,11 +578,212 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 730,
-        "y": 340,
+        "x": 750,
+        "y": 620,
         "wires": [
             [
                 "ef61de68f8dd82ec"
+            ]
+        ]
+    },
+    {
+        "id": "3c0a5319edacf910",
+        "type": "ui_template",
+        "z": "79285b2d3137a49f",
+        "group": "ea76730aa3078f89",
+        "name": "Inspect",
+        "order": 2,
+        "width": "10",
+        "height": "10",
+        "format": "<h3>Inspect Message</h3>\n<pre>\n<code ng-bind-html=\"msg.payload\"></code>\n</pre>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1660,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dc681d1608767193",
+        "type": "template",
+        "z": "79285b2d3137a49f",
+        "name": "",
+        "field": "payload._debug",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\n    \"ts\": {{msg.ts}},\n    \"topic\": \"{{msg.topic}}\"\n}",
+        "output": "json",
+        "x": 740,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bde457ac0c7cac9b",
+        "type": "mqtt in",
+        "z": "79285b2d3137a49f",
+        "name": "",
+        "topic": "FaceCoords/lastImage",
+        "qos": "2",
+        "datatype": "base64",
+        "broker": "075abfd86119e6f1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 80,
+        "wires": [
+            [
+                "006ec18805643425",
+                "9432041371173c55",
+                "65b9778ae2174581"
+            ]
+        ]
+    },
+    {
+        "id": "9432041371173c55",
+        "type": "ui_template",
+        "z": "79285b2d3137a49f",
+        "group": "098d1b550922726c",
+        "name": "Last Image",
+        "order": 4,
+        "width": "6",
+        "height": "9",
+        "format": "<h2>Last processed frame</h2>\n<img alt='lastImage' src=\"data:image/jpeg;base64,{{msg.payload}}\"></img>\n<p style='italics'>Callum is testing this out, but no one else's branch has this feature. I'll work out how we can manage privacy before I share the code with anyone.</p>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 850,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "006ec18805643425",
+        "type": "trigger",
+        "z": "79285b2d3137a49f",
+        "name": "",
+        "op1": "",
+        "op2": "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",
+        "op1type": "nul",
+        "op2type": "str",
+        "duration": "30",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 530,
+        "y": 20,
+        "wires": [
+            [
+                "9432041371173c55"
+            ]
+        ]
+    },
+    {
+        "id": "65b9778ae2174581",
+        "type": "change",
+        "z": "79285b2d3137a49f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"title\":\"last frame\",\"category\":\"Last Frame Update\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 300,
+        "y": 140,
+        "wires": [
+            [
+                "4c84a438164f5a8e"
+            ]
+        ]
+    },
+    {
+        "id": "6c92509e728915e0",
+        "type": "function",
+        "z": "79285b2d3137a49f",
+        "name": "stringify message",
+        "func": "msg.payload = JSON.stringify(RED.util.cloneMessage(msg),null,4)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1430,
+        "y": 940,
+        "wires": [
+            [
+                "3c0a5319edacf910"
+            ]
+        ]
+    },
+    {
+        "id": "5755a753cc2e9cd8",
+        "type": "ui_template",
+        "z": "79285b2d3137a49f",
+        "group": "913003a23650727b",
+        "name": "",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "format": "<p>Click on a message to display it in the message inspector</p>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1420,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "64ce99a850e905e0",
+        "type": "change",
+        "z": "79285b2d3137a49f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.category",
+                "pt": "msg",
+                "to": "Bounding Box Centre",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 510,
+        "y": 380,
+        "wires": [
+            [
+                "4c84a438164f5a8e"
             ]
         ]
     },
@@ -678,8 +893,8 @@
         "id": "f3043065bb600a6f",
         "type": "mqtt out",
         "z": "90210d597e7f1d20",
-        "name": "publish to /dobby-control",
-        "topic": "/dobby-control",
+        "name": "publish to /dobby/gesture",
+        "topic": "/dobby/gesture",
         "qos": "",
         "retain": "",
         "respTopic": "",
@@ -786,8 +1001,8 @@
         "group": "2a19e8e51cc58ef3",
         "name": "Display in list",
         "order": 2,
-        "width": "6",
-        "height": "5",
+        "width": "0",
+        "height": "0",
         "lineType": "two",
         "actionType": "click",
         "allowHTML": false,
@@ -797,7 +1012,8 @@
         "y": 280,
         "wires": [
             [
-                "46ff6ba2cb82cd05"
+                "46ff6ba2cb82cd05",
+                "25b232edd48ed287"
             ]
         ]
     },
@@ -811,19 +1027,18 @@
         "width": "6",
         "height": "5",
         "trigger": "all",
-        "timeInterval": "150",
+        "timeInterval": "200",
         "useThemeColor": false,
         "color": "#1f9380",
         "threshold": 0.1,
         "directions": "all",
         "shape": "squere",
         "centerAtRelease": false,
-        "x": 500,
+        "x": 200,
         "y": 740,
         "wires": [
             [
-                "67d1941b45a8ec07",
-                "0c6821d00a279d92"
+                "a646f05d48549ac2"
             ]
         ]
     },
@@ -839,8 +1054,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 800,
-        "y": 660,
+        "x": 1100,
+        "y": 640,
         "wires": []
     },
     {
@@ -869,8 +1084,8 @@
         "offcolor": "",
         "animate": true,
         "className": "",
-        "x": 490,
-        "y": 800,
+        "x": 290,
+        "y": 960,
         "wires": [
             []
         ]
@@ -887,11 +1102,11 @@
         "round": true,
         "property": "payload.vector.x",
         "name": "X axis Pixels",
-        "x": 810,
+        "x": 590,
         "y": 740,
         "wires": [
             [
-                "f1547953caac832f"
+                "0c6821d00a279d92"
             ]
         ],
         "inputLabels": [
@@ -921,8 +1136,8 @@
         "seg1": "",
         "seg2": "",
         "className": "",
-        "x": 970,
-        "y": 740,
+        "x": 1090,
+        "y": 840,
         "wires": []
     },
     {
@@ -948,8 +1163,8 @@
         "seg1": "",
         "seg2": "",
         "className": "",
-        "x": 970,
-        "y": 780,
+        "x": 1090,
+        "y": 880,
         "wires": []
     },
     {
@@ -964,11 +1179,15 @@
         "round": true,
         "property": "payload.vector.y",
         "name": "Y axis Pixels",
-        "x": 810,
-        "y": 780,
+        "x": 770,
+        "y": 740,
         "wires": [
             [
-                "ae140dd0cb52bc54"
+                "0551f0d526bbd2f0",
+                "ffdaa2be19a45088",
+                "f1547953caac832f",
+                "ae140dd0cb52bc54",
+                "6f6eec3c14c62791"
             ]
         ],
         "inputLabels": [
@@ -986,8 +1205,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
-        "y": 860,
+        "x": 430,
+        "y": 900,
         "wires": [
             [
                 "658181740ad45177"
@@ -1009,39 +1228,12 @@
         "resendOnRefresh": true,
         "templateScope": "local",
         "className": "",
-        "x": 790,
-        "y": 860,
+        "x": 670,
+        "y": 900,
         "wires": [
             [
                 "4ef51e05a720d447"
             ]
-        ]
-    },
-    {
-        "id": "6b19f183062f59d0",
-        "type": "inject",
-        "z": "90210d597e7f1d20",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 250,
-        "y": 860,
-        "wires": [
-            []
         ]
     },
     {
@@ -1057,8 +1249,80 @@
         "format": "{{msg.payload}}",
         "layout": "row-left",
         "className": "",
-        "x": 960,
-        "y": 860,
+        "x": 860,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "a646f05d48549ac2",
+        "type": "rbe",
+        "z": "90210d597e7f1d20",
+        "name": "",
+        "func": "rbei",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": true,
+        "property": "payload",
+        "topi": "topic",
+        "x": 410,
+        "y": 740,
+        "wires": [
+            [
+                "67d1941b45a8ec07"
+            ]
+        ]
+    },
+    {
+        "id": "ffdaa2be19a45088",
+        "type": "mqtt out",
+        "z": "90210d597e7f1d20",
+        "name": "",
+        "topic": "/dobby/head",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "075abfd86119e6f1",
+        "x": 1230,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "0551f0d526bbd2f0",
+        "type": "mqtt out",
+        "z": "90210d597e7f1d20",
+        "name": "",
+        "topic": "/debug",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "075abfd86119e6f1",
+        "x": 1210,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "25b232edd48ed287",
+        "type": "debug",
+        "z": "90210d597e7f1d20",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 180,
         "wires": []
     }
 ]
