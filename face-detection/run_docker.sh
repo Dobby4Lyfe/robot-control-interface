@@ -1,1 +1,1 @@
-docker run -it --device=/dev/video0 --env-file=.env face-detection:latest
+docker run -it --device=/dev/video0 --env-file=.env callumb/robot-face-detection:latest

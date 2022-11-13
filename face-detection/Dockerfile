@@ -9,17 +9,13 @@ COPY requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
    && rm -rf /tmp/pip-tmp
 
-COPY src /face-detect/
+COPY src /face-detection/
 
 # Don't allow core dump file to be created
 RUN ulimit -c 0 
 
-ENV MQTT_HOST \
-    MQTT_PORT \
-    MQTT_USERNAME \
-    MQTT_CLIENT_NAME \
-    USE_PI_CAMERA \
-    MAX_FPS \
-    SEND_FRAME_FREQUENCY
+ENV MQTT_HOST= MQTT_PORT= MQTT_USERNAME= MQTT_CLIENT_NAME= USE_PI_CAMERA= MAX_FPS= SEND_FRAME_FREQUENCY=
 
-CMD [ "python3", "/face-detect/run.py" ]
+ENTRYPOINT [ "python3", "-u" ]
+
+CMD [ "/face-detection/run.py" ]
