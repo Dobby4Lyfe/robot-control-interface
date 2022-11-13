@@ -1,0 +1,1 @@
+docker run -it --device=/dev/video0 --env-file=.env face-detection:latest

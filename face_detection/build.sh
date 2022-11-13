@@ -1,0 +1,1 @@
+docker build -t callumb/robot-face-detection:latest .
