@@ -19,18 +19,25 @@ class MqttClient(mqtt_client.Client):
             print("Failed to connect, return code %d\n", rc)
 
     def __init__(self, client_id, config: Config) -> None:
+
         # Settings for client
         self.debugTopic = '/debug'
         self.client_id = client_id + '-' + config.MQTT_CLIENT_NAME
+        self.callbacks = {}
 
         # Create Client
         self.client = mqtt_client.Client(client_id)
+
         if config.MQTT_USERNAME is not None:
             self.client.username_pw_set(
                 config.MQTT_USERNAME, config.MQTT_PASSWORD)
+
         self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+
         self.client.connect(config.MQTT_HOST, config.MQTT_PORT)
         self.client.loop_start()
+
         super().__init__()
 
     def publishLastFrame(self, lastFrame):
@@ -64,3 +71,23 @@ class MqttClient(mqtt_client.Client):
             "category": category
         }
         self.client.publish(self.debugTopic, payload=json.dumps(payload))
+
+    def subscribe(self, topic, callback):
+        print('subscribing to' + topic)
+        self.callbacks[topic] = callback
+        self.client.subscribe(topic)
+
+    def on_message(self, client, userdata, msg):
+        print(msg.topic + " " + msg.payload.decode())
+
+        try:
+            payload = json.loads(msg.payload)
+        except (Exception):
+            payload = {
+                "topic": msg.topic,
+                "payload": msg.payload.decode()
+            }
+
+        # loop through callbacks and
+        if msg.topic in self.callbacks:
+            self.callbacks[msg.topic](payload)
