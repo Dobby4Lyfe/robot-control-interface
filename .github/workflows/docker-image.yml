@@ -19,4 +19,4 @@ jobs:
         run: |
           docker buildx build \
           --tag your-username/multiarch-example:latest \
-          --platform linux/arm64 ./face-detection/
+          --platform linux/arm64,linux/amd64 ./face-detection/
