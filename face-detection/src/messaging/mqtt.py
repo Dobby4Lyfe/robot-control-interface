@@ -3,6 +3,7 @@ import json
 from paho.mqtt import client as mqtt_client
 
 from config import Config
+from messaging.contracts import servoMovementMessage, mqttMessage
 
 topic_bounding_box = "FaceCoords/BoundingBox"
 topic_bounding_box_centre = "FaceCoords/BoundingBoxCentre"
@@ -16,7 +17,7 @@ class MqttClient(mqtt_client.Client):
         if rc == 0:
             print("Connected to MQTT Broker as", self.client_id)
         else:
-            print("Failed to connect, return code %d\n", rc)
+            print(f"Failed to connect as {self.client_id}, return code {rc}")
 
     def __init__(self, client_id, config: Config) -> None:
 
@@ -63,6 +64,9 @@ class MqttClient(mqtt_client.Client):
         else:
             print("Failed to send messages via MQTT!!!")
 
+    def public_message(self, topic: str, message: mqttMessage):
+        self.client.publish(topic, json.dumps(message.__dict__))
+
     def publish_debug(self, message, component, category):
         payload = {
             "title": message,  # backward compatability for now
@@ -78,7 +82,7 @@ class MqttClient(mqtt_client.Client):
         self.client.subscribe(topic)
 
     def on_message(self, client, userdata, msg):
-        print(msg.topic + " " + msg.payload.decode())
+        #print(msg.topic + " " + msg.payload.decode())
 
         try:
             payload = json.loads(msg.payload)
@@ -87,6 +91,10 @@ class MqttClient(mqtt_client.Client):
                 "topic": msg.topic,
                 "payload": msg.payload.decode()
             }
+        
+        if msg.topic == '/servo-control':
+            payload = servoMovementMessage(**json.loads(msg.payload))
+            print(json.dumps(payload.__dict__, indent=2))
 
         # loop through callbacks and
         if msg.topic in self.callbacks:

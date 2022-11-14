@@ -14,6 +14,7 @@ from config import Config
 from .imageHelper import pil_image_to_byte_array
 from messaging.mqtt import MqttClient
 from messaging.telemetry import TelemetryClient
+from messaging.contracts import servoMovementMessage
 
 
 def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
@@ -65,7 +66,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
             telemetry.debug(f'Midpoint detected - x:{midpoint_x}  y:{midpoint_y}',"Face Detection Result")
             mqttClient.publishMessages(left, top, right, bottom,
                                        midpoint_x, midpoint_y)
-
+            mqttClient.public_message('/servo-control', servoMovementMessage(tilt = midpoint_x, pan = midpoint_y, mode= 'servo'))
         if (config.SEND_FRAME_FREQUENCY > 0 and frame_count % config.SEND_FRAME_FREQUENCY == 0):
             np_array_RGB = opencv2matplotlib(frame)
             image = Image.fromarray(np_array_RGB)  # PIL image

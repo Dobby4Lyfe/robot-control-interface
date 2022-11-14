@@ -7,18 +7,20 @@
 # rotate ID=2  limitset 389 -500- 622   (offset +60)
 
 import time
-from mqtt_helper import Mqtt
+from messaging.mqtt import MqttClient
+from messaging.contracts import servoMovementMessage
+from config import config
 import json
 import serial
 import lewansoul_lx16a
 
 SERIAL_PORT = '/dev/ttyUSB0'
 
-controller = lewansoul_lx16a.ServoController(
-    serial.Serial(SERIAL_PORT, 115200, timeout=1),
-)
+# controller = lewansoul_lx16a.ServoController(
+#     serial.Serial(SERIAL_PORT, 115200, timeout=1),
+# )
 
-dobby = Mqtt()
+dobby = MqttClient('dobby-servos', config)
 
 global name, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last
 global mode
@@ -32,15 +34,35 @@ rotate_last = 500
 mode = 'home'
 
 # define servo addressing
-pan_servo = controller.servo(1)
-rotate_servo = controller.servo(2)
-tilt_servo = controller.servo(3)
+# pan_servo = controller.servo(1)
+# rotate_servo = controller.servo(2)
+# tilt_servo = controller.servo(3)
 
 
-# set servos to home position
-pan_servo.move(500, 1000)
-tilt_servo.move(500, 1000)
-rotate_servo.move(500, 1000)
+def servo_move_home():
+    pass
+    # set servos to home position
+    # pan_servo.move(500, 1000)
+    # tilt_servo.move(500, 1000)
+    # rotate_servo.move(500, 1000)
+
+
+def servo_move_destination(payload: servoMovementMessage):
+    global mode, pan, tilt, rotate
+    pan = int((payload.pan-400)*.3)  # 0 to 800 pixels = 165 to 840 counts
+    tilt = int((payload.tilt-300)*.3)  # 0 to 600 pixels = 350 to 600 counts
+    rotate = payload.rotate
+    print("mode is SERVO   pan : ", pan, " tilt : ", tilt)
+    # time.sleep(1)
+
+
+def servo_move_incremental(payload: servoMovementMessage):
+    global mode, pan, tilt, rotate
+    pan = pan + payload.pan
+    tilt = tilt + payload.tilt
+    rotate = rotate + payload.rotate
+    print("mode is INCREMENTAL  pan : ", pan, " tilt : ", tilt)
+    # time.sleep(1)
 
 
 def servo_move(p=500, t=480, r=500):  # executed on mode/ topic change
@@ -62,7 +84,7 @@ def servo_move(p=500, t=480, r=500):  # executed on mode/ topic change
 
 def playphrase():  # executed on phrase/ topic change
     global mode, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last
-  # get current position of all servos
+    # get current position of all servos
     time.sleep(0.1)
     pan_last = pan_servo.get_position()
     time.sleep(0.05)
@@ -72,7 +94,7 @@ def playphrase():  # executed on phrase/ topic change
     time.sleep(0.05)
     print(pan_last, tilt_last, rotate_last)
     print(int(pan_last+pan), int(tilt_last+tilt))
-  # move servo to new position -take current position and add counts from payload, pan,tilt,rotate
+    # move servo to new position -take current position and add counts from payload, pan,tilt,rotate
     pan_servo.move_prepare(int(pan_last+pan), 1000)
     time.sleep(0.05)
     tilt_servo.move_prepare(int(tilt_last+tilt), 1000)
@@ -82,7 +104,7 @@ def playphrase():  # executed on phrase/ topic change
     #rotate_servo.move_prepare(int(rotate_last+rotate), 2000)
     time.sleep(0.05)
     controller.move_start()
-  # move servos back to orig position (not required for inc"remental" function)
+    # move servos back to orig position (not required for inc"remental" function)
     if not (mode != "inc" or mode != "servo"):
         time.sleep(delay)
         pan_servo.move(pan_last, 1000)
@@ -91,14 +113,15 @@ def playphrase():  # executed on phrase/ topic change
         time.sleep(0.5)
 
 
-def mode_payload(msg):
-    global mode, pan, tilt, rotate
-    payload = json.loads(msg['payload'])
-    mode = payload['mode']
-    pan = payload['pan']
-    tilt = payload['tilt']
-    rotate = payload['rotate']
-    servo_move()
+def mode_payload(payload: servoMovementMessage):
+    if payload.mode == 'home':
+      servo_move_home(payload)
+    elif payload.mode == 'inc':
+      servo_move_incremental(payload)
+    elif payload.mode == 'servo':
+      servo_move_destination(payload)
+    else:
+      raise ValueError(payload.mode)
 
 
 def phrase_payload(msg):
@@ -111,7 +134,7 @@ def phrase_payload(msg):
     playphrase()
 
 
-dobby.subscribe('/mode', mode_payload)
+dobby.subscribe('/servo-control', mode_payload)
 dobby.subscribe('/phrase', phrase_payload)
 
 time.sleep(3)
