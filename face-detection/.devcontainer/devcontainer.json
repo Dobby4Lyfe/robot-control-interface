@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/python-3
 {
 	"name": "Python 3",
-	"runArgs": ["--device=/dev/video0"],
+	"runArgs": ["--device=/dev/video0:/dev/video0", "--privileged"],
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": "..",
@@ -53,6 +53,7 @@
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
 	"features": {
+		"docker-from-docker": "latest",
 		"git": "latest"
 	}
 }
