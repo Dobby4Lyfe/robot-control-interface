@@ -29,6 +29,16 @@ services:
       - .env
     networks:
       - node-red-net
+  servo-control:
+    image: callumb/robot-face-detection:latest
+    # When available, we'll need to mount /dev/usbTTY0
+    #devices:
+    #  - /dev/usbTTY0:/dev/usbTTY0
+    env_file:
+      - .env
+    networks:
+      - node-red-net
+    command: '/face-detection/run-servos.py'
 
 networks:
   node-red-net:
