@@ -3,6 +3,7 @@ import json
 from paho.mqtt import client as mqtt_client
 
 from config import Config
+from messaging.contracts import servoMovementMessage, mqttMessage
 
 topic_bounding_box = "FaceCoords/BoundingBox"
 topic_bounding_box_centre = "FaceCoords/BoundingBoxCentre"
@@ -16,21 +17,28 @@ class MqttClient(mqtt_client.Client):
         if rc == 0:
             print("Connected to MQTT Broker as", self.client_id)
         else:
-            print("Failed to connect, return code %d\n", rc)
+            print(f"Failed to connect as {self.client_id}, return code {rc}")
 
     def __init__(self, client_id, config: Config) -> None:
+
         # Settings for client
         self.debugTopic = '/debug'
         self.client_id = client_id + '-' + config.MQTT_CLIENT_NAME
+        self.callbacks = {}
 
         # Create Client
         self.client = mqtt_client.Client(client_id)
+
         if config.MQTT_USERNAME is not None:
             self.client.username_pw_set(
                 config.MQTT_USERNAME, config.MQTT_PASSWORD)
+
         self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+
         self.client.connect(config.MQTT_HOST, config.MQTT_PORT)
         self.client.loop_start()
+
         super().__init__()
 
     def publishLastFrame(self, lastFrame):
@@ -56,6 +64,9 @@ class MqttClient(mqtt_client.Client):
         else:
             print("Failed to send messages via MQTT!!!")
 
+    def public_message(self, topic: str, message: mqttMessage):
+        self.client.publish(topic, json.dumps(message.__dict__))
+
     def publish_debug(self, message, component, category):
         payload = {
             "title": message,  # backward compatability for now
@@ -64,3 +75,27 @@ class MqttClient(mqtt_client.Client):
             "category": category
         }
         self.client.publish(self.debugTopic, payload=json.dumps(payload))
+
+    def subscribe(self, topic, callback):
+        print('subscribing to' + topic)
+        self.callbacks[topic] = callback
+        self.client.subscribe(topic)
+
+    def on_message(self, client, userdata, msg):
+        #print(msg.topic + " " + msg.payload.decode())
+
+        try:
+            payload = json.loads(msg.payload)
+        except (Exception):
+            payload = {
+                "topic": msg.topic,
+                "payload": msg.payload.decode()
+            }
+        
+        if msg.topic == '/servo-control':
+            payload = servoMovementMessage(**json.loads(msg.payload))
+            print(json.dumps(payload.__dict__, indent=2))
+
+        # loop through callbacks and
+        if msg.topic in self.callbacks:
+            self.callbacks[msg.topic](payload)

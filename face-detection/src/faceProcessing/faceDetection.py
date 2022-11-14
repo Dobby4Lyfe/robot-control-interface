@@ -9,27 +9,24 @@ from imutils.video import FPS
 from imutils import opencv2matplotlib
 from PIL import Image
 
+from config import Config
+
 from .imageHelper import pil_image_to_byte_array
 from messaging.mqtt import MqttClient
 from messaging.telemetry import TelemetryClient
-
-# We'll try and keep the update rate with dynamic sleep
-MAX_FPS = 4
-
-# Send the actual frame to node-red only this often
-SEND_FRAME_EVERY = 2
+from messaging.contracts import servoMovementMessage
 
 
-def face_seek(imageQueue: queue.Queue, config, usePiCamera = True):
+def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
     fps = FPS()
     # Initializing the video stream
 
     time.sleep(2.0)
     mqttClient = MqttClient('dobby-face-processing', config)
-    telemetry = TelemetryClient(mqttClient, "Face Detection Debug")
+    telemetry = TelemetryClient(mqttClient, "Face Detection")
 
     telemetry.debug('Opening camera', "Face Detection Debug")
-    video_stream = VideoStream(usePiCamera=usePiCamera, resolution=[320, 240], framerate=MAX_FPS).start()
+    video_stream = VideoStream(usePiCamera=usePiCamera, resolution=[320, 240], framerate=config.MAX_FPS).start()
 
     telemetry.debug('Starting face detection loop...')
     fps.start()
@@ -66,10 +63,11 @@ def face_seek(imageQueue: queue.Queue, config, usePiCamera = True):
                 imageQueue.get(True)
                 imageQueue.task_done()
             imageQueue.put(tuple([midpoint_x, midpoint_y]))
+            telemetry.debug(f'Midpoint detected - x:{midpoint_x}  y:{midpoint_y}',"Face Detection Result")
             mqttClient.publishMessages(left, top, right, bottom,
                                        midpoint_x, midpoint_y)
-
-        if (frame_count % SEND_FRAME_EVERY == 0):
+            mqttClient.public_message('/servo-control', servoMovementMessage(tilt = midpoint_x, pan = midpoint_y, mode= 'servo'))
+        if (config.SEND_FRAME_FREQUENCY > 0 and frame_count % config.SEND_FRAME_FREQUENCY == 0):
             np_array_RGB = opencv2matplotlib(frame)
             image = Image.fromarray(np_array_RGB)  # PIL image
             last_frame = pil_image_to_byte_array(image)
@@ -80,11 +78,11 @@ def face_seek(imageQueue: queue.Queue, config, usePiCamera = True):
 
         if (frame_count % 10 == 0):
             fps.stop()
-            telemetry.debug("[Debug] approx. FPS: {:.2f}".format(
+            telemetry.debug("Approx. FPS: {:.2f}".format(
                 fps.fps()), "Face Detection Debug")
             fps = FPS().start()
 
-        updateSpeed = 1 / MAX_FPS
+        updateSpeed = 1 / config.MAX_FPS
         delta = (time.monotonic() - start)
         sleep = .001 if delta >= updateSpeed else updateSpeed - delta
         time.sleep(sleep)

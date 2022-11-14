@@ -6,5 +6,5 @@ class TelemetryClient():
         self.component = component_name
     
     def debug(self, message: str, category = "Unknown"):
-        self.mqtt.publish_debug(message, self.component, category)
+        self.mqtt.publish_debug('[Debug] ' + message, self.component, category)
         print(message)
