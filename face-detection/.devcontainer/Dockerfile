@@ -22,6 +22,9 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/serv
 
 RUN ulimit -c 0 
 
+RUN adduser vscode dialout
+RUN adduser vscode video
+
 # [Optional] Uncomment this section to install additional OS packages.
 
 # [Optional] Uncomment this line to install global node packages.
