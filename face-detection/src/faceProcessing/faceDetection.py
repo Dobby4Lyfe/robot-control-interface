@@ -38,7 +38,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
         frame = video_stream.read()
         frame_count = frame_count + 1
         # frame = imutils.resize(frame, width=500)
-        frame = imutils.resize(frame, width=300)
+        frame = imutils.resize(frame, width=500)
         # Detect the fce boxes
         boxes = face_recognition.face_locations(frame)
         # names = []
@@ -66,7 +66,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
             telemetry.debug(f'Midpoint detected - x:{midpoint_x}  y:{midpoint_y}',"Face Detection Result")
             mqttClient.publishMessages(left, top, right, bottom,
                                        midpoint_x, midpoint_y)
-            mqttClient.public_message('/servo-control', servoMovementMessage(tilt = midpoint_x, pan = midpoint_y, mode= 'servo'))
+            mqttClient.public_message('/servo-control', servoMovementMessage(tilt = midpoint_y, pan = midpoint_x, mode= 'servo'))
         if (config.SEND_FRAME_FREQUENCY > 0 and frame_count % config.SEND_FRAME_FREQUENCY == 0):
             np_array_RGB = opencv2matplotlib(frame)
             image = Image.fromarray(np_array_RGB)  # PIL image
