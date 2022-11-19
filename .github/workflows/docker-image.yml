@@ -33,4 +33,5 @@ jobs:
           context: ./face-detection/
           push: true
           tags: callumb/robot-face-detection:latest
-          platforms: {{ matrix.aarch }}
+          platforms: 
+             linux/${{ matrix.aarch }}
