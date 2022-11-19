@@ -6,9 +6,6 @@ on:
 
 jobs:
   docker:
-    strategy:
-      matrix:
-        aarch: [arm64, amd64]
     runs-on: ubuntu-latest
     steps:
       -
@@ -34,4 +31,5 @@ jobs:
           push: true
           tags: callumb/robot-face-detection:latest
           platforms: 
-             linux/${{ matrix.aarch }}
+             linux/amd64
+             linux/arm64
