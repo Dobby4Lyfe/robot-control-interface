@@ -29,7 +29,9 @@ jobs:
         with:
           context: ./face-detection/
           push: true
-          tags: callumb/robot-face-detection:latest
+          tags: 
+            callumb/robot-face-detection:latest
+            callumb/robot-face-detection:${{ github.sha }}
           platforms: 
              linux/amd64
              linux/arm64
