@@ -1,4 +1,5 @@
 import json
+import time
 
 from paho.mqtt import client as mqtt_client
 
@@ -38,6 +39,7 @@ class MqttClient(mqtt_client.Client):
 
         self.client.connect(config.MQTT_HOST, config.MQTT_PORT)
         self.client.loop_start()
+        self.client.max_inflight_messages_set = 1
 
         super().__init__()
 
@@ -80,10 +82,10 @@ class MqttClient(mqtt_client.Client):
         print('subscribing to' + topic)
         self.callbacks[topic] = callback
         self.client.subscribe(topic)
+        
 
     def on_message(self, client, userdata, msg):
         #print(msg.topic + " " + msg.payload.decode())
-
         try:
             payload = json.loads(msg.payload)
         except (Exception):
@@ -92,8 +94,12 @@ class MqttClient(mqtt_client.Client):
                 "payload": msg.payload.decode()
             }
         
+
+
         if msg.topic == '/servo-control':
             payload = servoMovementMessage(**json.loads(msg.payload))
+            if ((time.time() - payload.ts) > .5):
+                return
             print(json.dumps(payload.__dict__, indent=2))
 
         # loop through callbacks and

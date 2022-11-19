@@ -12,13 +12,13 @@ from messaging.contracts import servoMovementMessage
 from config import config
 import json
 import serial
-import lewansoul_lx16a
+from lewansoul_lx16a import ServoController, Servo
 
 SERIAL_PORT = '/dev/ttyUSB0'
 
-# controller = lewansoul_lx16a.ServoController(
-#     serial.Serial(SERIAL_PORT, 115200, timeout=1),
-# )
+controller = ServoController(
+    serial.Serial(SERIAL_PORT, 115200, timeout=1),
+)
 
 dobby = MqttClient('dobby-servos', config)
 
@@ -34,26 +34,33 @@ rotate_last = 500
 mode = 'home'
 
 # define servo addressing
-# pan_servo = controller.servo(1)
-# rotate_servo = controller.servo(2)
-# tilt_servo = controller.servo(3)
+pan_servo = controller.servo(1)
+rotate_servo = controller.servo(2)
+tilt_servo = controller.servo(3)
 
 
 def servo_move_home():
-    pass
     # set servos to home position
-    # pan_servo.move(500, 1000)
-    # tilt_servo.move(500, 1000)
-    # rotate_servo.move(500, 1000)
+    pan_servo.move(500, 1000)
+    tilt_servo.move(500, 1000)
+    rotate_servo.move(500, 1000)
 
 
 def servo_move_destination(payload: servoMovementMessage):
-    global mode, pan, tilt, rotate
-    pan = int((payload.pan-400)*.3)  # 0 to 800 pixels = 165 to 840 counts
-    tilt = int((payload.tilt-300)*.3)  # 0 to 600 pixels = 350 to 600 counts
-    rotate = payload.rotate
-    print("mode is SERVO   pan : ", pan, " tilt : ", tilt)
-    # time.sleep(1)
+    global mode, pan, tilt, rotate, pan_servo, rotate_servo, tilt_servo
+    print(f'Age of message is {time.time() - payload.ts}')
+    pan = 1000 - ((payload.pan * 2 - 500) * .3 + 500)
+    print(f'Raw pan position {payload.pan} mapped to {pan}')
+    # pan = 1000 - int((payload.pan) * 2)  # 0 to 800 pixels = 165 to 840 counts
+    # tilt = int((payload.tilt)*.3)  # 0 to 600 pixels = 350 to 600 counts
+    # rotate = payload.rotate
+    distance = pan_servo.get_position() - pan
+    if distance < 0:
+        distance = distance * - 1
+    speed = (distance / 100) * 400
+    if (distance > 20):
+        print(f'Moving {distance} steps in {speed}ms')
+        pan_servo.move(pan, speed)
 
 
 def servo_move_incremental(payload: servoMovementMessage):
@@ -115,13 +122,13 @@ def playphrase():  # executed on phrase/ topic change
 
 def mode_payload(payload: servoMovementMessage):
     if payload.mode == 'home':
-      servo_move_home(payload)
+        servo_move_home()
     elif payload.mode == 'inc':
-      servo_move_incremental(payload)
+        servo_move_incremental(payload)
     elif payload.mode == 'servo':
-      servo_move_destination(payload)
+        servo_move_destination(payload)
     else:
-      raise ValueError(payload.mode)
+        raise ValueError(payload.mode)
 
 
 def phrase_payload(msg):
@@ -134,11 +141,14 @@ def phrase_payload(msg):
     playphrase()
 
 
+servo_move_home()
+
 dobby.subscribe('/servo-control', mode_payload)
-dobby.subscribe('/phrase', phrase_payload)
+# dobby.subscribe('/phrase', phrase_payload)
 
 time.sleep(3)
 
+
 while 1:
     #print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
-    time.sleep(1)
+    time.sleep(20)
