@@ -16,6 +16,10 @@ COPY requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
    && rm -rf /tmp/pip-tmp
 
+COPY servo-requirements.txt /tmp/pip-tmp/
+RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/servo-requirements.txt \
+   && rm -rf /tmp/pip-tmp
+
 RUN ulimit -c 0 
 
 # [Optional] Uncomment this section to install additional OS packages.
