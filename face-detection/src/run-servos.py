@@ -49,8 +49,10 @@ def servo_move_home():
 def servo_move_destination(payload: servoMovementMessage):
     global mode, pan, tilt, rotate, pan_servo, rotate_servo, tilt_servo
     print(f'Age of message is {time.time() - payload.ts}')
-    pan = 1000 - ((payload.pan * 2 - 500) * .3 + 500)
+    pan = 1000 - ((payload.pan * 2 - 500) * .25 + 500)
+    tilt = 1000 - ((payload.tilt * 2 - 500) * .3 +500)
     print(f'Raw pan position {payload.pan} mapped to {pan}')
+    print(f'Raw pan position {payload.tilt} mapped to {tilt}')
     # pan = 1000 - int((payload.pan) * 2)  # 0 to 800 pixels = 165 to 840 counts
     # tilt = int((payload.tilt)*.3)  # 0 to 600 pixels = 350 to 600 counts
     # rotate = payload.rotate
@@ -61,6 +63,8 @@ def servo_move_destination(payload: servoMovementMessage):
     if (distance > 20):
         print(f'Moving {distance} steps in {speed}ms')
         pan_servo.move(pan, speed)
+    tilt_servo.move(tilt, 500)
+    time.sleep(1)
 
 
 def servo_move_incremental(payload: servoMovementMessage):
