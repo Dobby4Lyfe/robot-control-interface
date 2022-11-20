@@ -9,8 +9,6 @@ COPY requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
    && rm -rf /tmp/pip-tmp
 
-COPY src /face-detection/
-
 COPY servo-requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/servo-requirements.txt \
    && rm -rf /tmp/pip-tmp
@@ -19,6 +17,8 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/serv
 RUN ulimit -c 0 
 
 ENV MQTT_HOST= MQTT_PORT= MQTT_USERNAME= MQTT_CLIENT_NAME= USE_PI_CAMERA= MAX_FPS= SEND_FRAME_FREQUENCY=
+
+COPY src /face-detection/
 
 ENTRYPOINT [ "python3", "-u" ]
 

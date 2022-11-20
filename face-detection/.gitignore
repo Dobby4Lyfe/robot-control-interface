@@ -1,6 +1,7 @@
 # Dobby project ignores
 core
 .env
+id_rsa
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -46,21 +46,30 @@ def servo_move_home():
     rotate_servo.move(500, 1000)
 
 
+def prepare_movement(servo: Servo, destination: int, threshold: int):
+    distance = servo.get_position() - destination
+    if distance < 0:
+        distance = distance * - 1
+    speed = distance * 6
+    if distance > threshold:
+        print(f'Moving {distance} steps in {speed}ms')
+        servo.move_prepare(destination, speed)
+
+
 def servo_move_destination(payload: servoMovementMessage):
     global mode, pan, tilt, rotate, pan_servo, rotate_servo, tilt_servo
     print(f'Age of message is {time.time() - payload.ts}')
-    pan = 1000 - ((payload.pan * 2 - 500) * .3 + 500)
+    pan = 1000 - ((payload.pan * 2 - 500) * .25 + 500)
+    tilt = 1000 - ((payload.tilt * 2 - 500) * .3 + 500)
     print(f'Raw pan position {payload.pan} mapped to {pan}')
+    print(f'Raw pan position {payload.tilt} mapped to {tilt}')
     # pan = 1000 - int((payload.pan) * 2)  # 0 to 800 pixels = 165 to 840 counts
     # tilt = int((payload.tilt)*.3)  # 0 to 600 pixels = 350 to 600 counts
     # rotate = payload.rotate
-    distance = pan_servo.get_position() - pan
-    if distance < 0:
-        distance = distance * - 1
-    speed = (distance / 100) * 400
-    if (distance > 20):
-        print(f'Moving {distance} steps in {speed}ms')
-        pan_servo.move(pan, speed)
+    prepare_movement(pan_servo, pan, 30)
+    prepare_movement(tilt_servo, tilt, 10)
+    controller.move_start()
+    time.sleep(.1)
 
 
 def servo_move_incremental(payload: servoMovementMessage):
