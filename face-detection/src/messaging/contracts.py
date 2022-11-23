@@ -17,9 +17,11 @@ class servoMovementMessage(mqttMessage):
         self.ts: int = ts or time.time() 
 
 class gestureRequestMessage(mqttMessage):
-    def __init__(self, tilt = 0, pan = 0, rotate = 0, ts = None, soundByte = None) -> None:
+    def __init__(self, tilt = 0, pan = 0, rotate = 0, ts = None, soundByte = None, duration_seconds: int = 1, gesture_name = None) -> None:
         self.tilt: int = tilt
         self.pan: int = pan
         self.rotate: int = rotate
         self.ts: int = ts or time.time() 
         self.soundByte: string = soundByte
+        self.duration_seconds = duration_seconds
+        self.gesture_name = gesture_name

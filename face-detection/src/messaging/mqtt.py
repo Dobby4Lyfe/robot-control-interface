@@ -88,13 +88,14 @@ class MqttClient(mqtt_client.Client):
         print(msg.topic + " " + msg.payload.decode())
         try:
             payload = json.loads(msg.payload)
-        except (Exception):
+        except Exception as e:
+            print(ex)
             payload = {
                 "topic": msg.topic,
                 "payload": msg.payload.decode()
             }
         
-
+        
 
         if msg.topic == '/servo-control':
             payload = servoMovementMessage(**json.loads(msg.payload))
@@ -104,6 +105,8 @@ class MqttClient(mqtt_client.Client):
 
         if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
             payload = gestureRequestMessage(**json.loads(msg.payload))
+            if ((time.time() - payload.ts) > 2):
+                return
 
         # loop through callbacks and
         if msg.topic in self.callbacks:

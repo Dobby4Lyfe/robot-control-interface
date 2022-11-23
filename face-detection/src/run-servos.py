@@ -81,26 +81,31 @@ def servo_move_incremental(payload: servoMovementMessage):
     # time.sleep(1)
 
 
-def servo_move(p=500, t=480, r=500):  # executed on mode/ topic change
-    global mode, pan, tilt, rotate
-    if mode == "home":
-        pan_servo.move(p, 1000)
-        tilt_servo.move(t, 1000)
-        rotate_servo.move(r, 1000)
-        print("mode is HOME  pan : ", p, " tilt : ", t, "rotate : ", r)
-    if mode == "servo":  # this payload contains pixels not servo counts
-        pan = int((pan-400)*.3)  # 0 to 800 pixels = 165 to 840 counts
-        tilt = int((tilt-300)*.3)  # 0 to 600 pixels = 350 to 600 counts
-        print("mode is SERVO   pan : ", pan, " tilt : ", tilt)
-        playphrase()
-    if mode == "inc":
-        print("mode is INCREMENTAL  pan : ", pan, " tilt : ", tilt)
-        playphrase()
+# def servo_move(p=500, t=480, r=500):  # executed on mode/ topic change
+#     global mode, pan, tilt, rotate
+#     if mode == "home":
+#         pan_servo.move(p, 1000)
+#         tilt_servo.move(t, 1000)
+#         rotate_servo.move(r, 1000)
+#         print("mode is HOME  pan : ", p, " tilt : ", t, "rotate : ", r)
+#     if mode == "servo":  # this payload contains pixels not servo counts
+#         pan = int((pan-400)*.3)  # 0 to 800 pixels = 165 to 840 counts
+#         tilt = int((tilt-300)*.3)  # 0 to 600 pixels = 350 to 600 counts
+#         print("mode is SERVO   pan : ", pan, " tilt : ", tilt)
+#         run_gesture()
+#     if mode == "inc":
+#         print("mode is INCREMENTAL  pan : ", pan, " tilt : ", tilt)
+#         run_gesture()
 
 
-def playphrase():  # executed on phrase/ topic change
+def run_gesture(msg: gestureRequestMessage):  # executed on phrase/ topic change
     global mode, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last
     # get current position of all servos
+    print(f'Received gesture request for {msg.gesture_name}')
+    pan = msg.pan
+    tilt = msg.tilt
+    rotate = msg.rotate
+    delay = msg.duration_seconds
     time.sleep(0.1)
     pan_last = pan_servo.get_position()
     time.sleep(0.05)
@@ -122,11 +127,12 @@ def playphrase():  # executed on phrase/ topic change
     controller.move_start()
     # move servos back to orig position (not required for inc"remental" function)
     # if not (mode != "inc" or mode != "servo"):
-    time.sleep(4)
-    pan_servo.move(pan_last, 1000)
-    tilt_servo.move(tilt_last, 1000)
-    rotate_servo.move(rotate_last, 1000)
-    time.sleep(0.5)
+    time.sleep(delay)
+    prepare_movement(pan_servo, pan_last, 5)
+    prepare_movement(tilt_servo, tilt_last, 5)
+    prepare_movement(rotate_servo, rotate_last, 5)
+    controller.move_start()
+    time.sleep(1)
 
 
 def mode_payload(payload: servoMovementMessage):
@@ -139,25 +145,23 @@ def mode_payload(payload: servoMovementMessage):
     else:
         raise ValueError(payload.mode)
 
-
-def phrase_payload(msg: gestureRequestMessage):
-    global pan, tilt, rotate, delay
-    print('Received Gesture!')
-    pan = msg.pan
-    tilt = msg.tilt
-    rotate = msg.rotate
-    # delay = payload['delay']
-    playphrase()
-
-
 servo_move_home()
 
 dobby.subscribe('/servo-control', mode_payload)
-dobby.subscribe('/servo-gesture', phrase_payload)
+dobby.subscribe('/servo-gesture', run_gesture)
 
 time.sleep(3)
 
+def printLocations():
+    time.sleep(0.1)
+    pan_last = pan_servo.get_position()
+    time.sleep(0.05)
+    tilt_last = tilt_servo.get_position()
+    time.sleep(0.05)
+    rotate_last = rotate_servo.get_position()
+    print(f'tilt: {tilt_last} \n pan: {pan_last} \n rotate: {rotate_last}\n')
 
 while 1:
-    #print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
-    time.sleep(20)
+#    print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
+    time.sleep(10)
+#    printLocations()

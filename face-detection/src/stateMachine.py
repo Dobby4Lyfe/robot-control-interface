@@ -1,6 +1,7 @@
 from ast import Dict
 import time
 from state_machine import acts_as_state_machine, before, State, Event, after, InvalidStateTransition
+from messaging.contracts import gestureRequestMessage
 from messaging.telemetry import TelemetryClient
 
 @acts_as_state_machine
@@ -44,9 +45,9 @@ class Dobby():
         if (self.is_locked):
             self.lostFace()
 
-    def set_gesturing(self, gesture: Dict):
+    def set_gesturing(self, gesture: gestureRequestMessage):
         self.startGesture()
-        time.sleep(5)
+        time.sleep(gesture.duration_seconds + 1)
         self.lostFace()
         
         
