@@ -1,3 +1,5 @@
+from ast import Dict
+import time
 from state_machine import acts_as_state_machine, before, State, Event, after, InvalidStateTransition
 from messaging.telemetry import TelemetryClient
 
@@ -12,9 +14,11 @@ class Dobby():
 
     seeking = State(initial=True)
     locked = State()
+    gesturing = State()
 
     lockFace = Event(from_states=seeking, to_state=locked)
-    lostFace = Event(from_states=locked, to_state=seeking)
+    lostFace = Event(from_states=[gesturing,locked], to_state=seeking)
+    startGesture = Event(from_states=[seeking,locked], to_state=gesturing)
 
     @before('lockFace')
     def find_target(self):
@@ -25,6 +29,11 @@ class Dobby():
     def lose_target(self):
         self.telemetryClient.debug("Dobby can't find you, Dobby is sad", "Dobby State")
 
+
+    @before('startGesture')
+    def starting_gesture(self):
+        self.telemetryClient.debug("Dobby is performing a gesture!")
+
     def set_face_location(self, x, y):
         self.target_y = y
         self.target_x = x
@@ -34,3 +43,11 @@ class Dobby():
     def set_no_face(self):
         if (self.is_locked):
             self.lostFace()
+
+    def set_gesturing(self, gesture: Dict):
+        self.startGesture()
+        time.sleep(5)
+        self.lostFace()
+        
+        
+

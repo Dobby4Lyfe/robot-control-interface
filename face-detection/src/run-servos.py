@@ -8,7 +8,7 @@
 
 import time
 from messaging.mqtt import MqttClient
-from messaging.contracts import servoMovementMessage
+from messaging.contracts import gestureRequestMessage, servoMovementMessage
 from config import config
 import json
 import serial
@@ -46,7 +46,7 @@ def servo_move_home():
     rotate_servo.move(500, 1000)
 
 
-def prepare_movement(servo: Servo, destination: int, threshold: int):
+def prepare_movement(servo: Servo, destination: int, threshold: int = 5):
     distance = servo.get_position() - destination
     if distance < 0:
         distance = distance * - 1
@@ -111,22 +111,22 @@ def playphrase():  # executed on phrase/ topic change
     print(pan_last, tilt_last, rotate_last)
     print(int(pan_last+pan), int(tilt_last+tilt))
     # move servo to new position -take current position and add counts from payload, pan,tilt,rotate
-    pan_servo.move_prepare(int(pan_last+pan), 1000)
+    prepare_movement(pan_servo, int(pan_last+pan))
     time.sleep(0.05)
-    tilt_servo.move_prepare(int(tilt_last+tilt), 1000)
+    prepare_movement(tilt_servo, int(tilt_last+tilt))
     time.sleep(0.05)
-    rotate_servo.move_prepare(500, 1000)
+    prepare_movement(rotate_servo, int(rotate_last + rotate))
     time.sleep(0.05)
     #rotate_servo.move_prepare(int(rotate_last+rotate), 2000)
     time.sleep(0.05)
     controller.move_start()
     # move servos back to orig position (not required for inc"remental" function)
-    if not (mode != "inc" or mode != "servo"):
-        time.sleep(delay)
-        pan_servo.move(pan_last, 1000)
-        tilt_servo.move(tilt_last, 1000)
-        rotate_servo.move(rotate_last, 1000)
-        time.sleep(0.5)
+    # if not (mode != "inc" or mode != "servo"):
+    time.sleep(4)
+    pan_servo.move(pan_last, 1000)
+    tilt_servo.move(tilt_last, 1000)
+    rotate_servo.move(rotate_last, 1000)
+    time.sleep(0.5)
 
 
 def mode_payload(payload: servoMovementMessage):
@@ -140,20 +140,20 @@ def mode_payload(payload: servoMovementMessage):
         raise ValueError(payload.mode)
 
 
-def phrase_payload(msg):
+def phrase_payload(msg: gestureRequestMessage):
     global pan, tilt, rotate, delay
-    payload = json.loads(msg['payload'])
-    pan = payload['pan']
-    tilt = payload['tilt']
-    rotate = payload['rotate']
-    delay = payload['delay']
+    print('Received Gesture!')
+    pan = msg.pan
+    tilt = msg.tilt
+    rotate = msg.rotate
+    # delay = payload['delay']
     playphrase()
 
 
 servo_move_home()
 
 dobby.subscribe('/servo-control', mode_payload)
-# dobby.subscribe('/phrase', phrase_payload)
+dobby.subscribe('/servo-gesture', phrase_payload)
 
 time.sleep(3)
 
