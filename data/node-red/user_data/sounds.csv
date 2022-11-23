@@ -1,3 +1,4 @@
-Hello,hello.wav,fa-solid fa-play
-Goodbye,goodbye.wav,fa-play
-Greetings,greetings.wav,fa-play
+title,duration_seconds,pan,tilt,rotate,soundByte,icon_name
+Up and right,1,50,50,50,nothing.wav,fa-solid fa-play
+Down,2,0,-150,0,nothing.wav,fa-play
+Nothing,1,0,0,0,nothing.wav,fa-play
