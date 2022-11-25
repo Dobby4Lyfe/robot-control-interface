@@ -89,7 +89,7 @@ class MqttClient(mqtt_client.Client):
         # print(msg.topic + " " + msg.payload.decode())
         try:
             payload = json.loads(msg.payload)
-        except Exception as e:
+        except Exception as ex:
             print(ex)
             payload = {
                 "topic": msg.topic,
