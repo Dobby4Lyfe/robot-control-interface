@@ -70,12 +70,13 @@ class MqttClient(mqtt_client.Client):
     def publish_message(self, topic: str, message: mqttMessage):
         self.client.publish(topic, json.dumps(message.__dict__))
 
-    def publish_debug(self, message, component, category):
+    def publish_debug(self, message, component, category, level):
         payload = {
             "title": message,  # backward compatability for now
             "message": message,
             "component": component,
-            "category": category
+            "category": category,
+            "level": level
         }
         self.client.publish(self.debugTopic, payload=json.dumps(payload))
 
@@ -86,7 +87,6 @@ class MqttClient(mqtt_client.Client):
         
 
     def on_message(self, client, userdata, msg):
-        # print(msg.topic + " " + msg.payload.decode())
         try:
             payload = json.loads(msg.payload)
         except Exception as ex:
@@ -102,13 +102,11 @@ class MqttClient(mqtt_client.Client):
             payload = servoMovementMessage(**json.loads(msg.payload))
             if ((time.time() - payload.ts) > .5):
                 return
-            # print(json.dumps(payload.__dict__, indent=2))
 
         if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
             payload = gestureRequestMessage(**json.loads(msg.payload))
             if ((time.time() - payload.ts) > 2):
                 return
 
-        # loop through callbacks and
         if msg.topic in self.callbacks:
             self.callbacks[msg.topic](payload)

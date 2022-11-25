@@ -6,10 +6,10 @@ from messaging.telemetry import TelemetryClient
 
 @acts_as_state_machine
 class Dobby():
-    def __init__(self, telemetryClient: TelemetryClient) -> None:
+    def __init__(self, telemetry: TelemetryClient) -> None:
         self.target_x = None
         self.target_y = None
-        self.telemetryClient = telemetryClient
+        self.telemetryClient = telemetry
 
     name = 'Dobby'
 
@@ -20,20 +20,22 @@ class Dobby():
     lockFace = Event(from_states=seeking, to_state=locked)
     lostFace = Event(from_states=[gesturing,locked], to_state=seeking)
     startGesture = Event(from_states=[seeking,locked], to_state=gesturing)
-
+    
     @before('lockFace')
     def find_target(self):
-        self.telemetryClient.debug("Dobby can see you at x:{x} y:{y}, Dobby is excited!".format(
-            x=self.target_x, y=self.target_y), "Dobby State")
+        self.telemetryClient.debug(f'Dobby can see you at x:{self.target_x} y:{self.target_y}, Dobby is excited!', "Dobby State")
 
     @after('lostFace')
     def lose_target(self):
         self.telemetryClient.debug("Dobby can't find you, Dobby is sad", "Dobby State")
 
-
     @before('startGesture')
     def starting_gesture(self):
         self.telemetryClient.debug("Dobby is performing a gesture!")
+
+    @after('startGesture')
+    def finishing_gesture(self):
+        self.telemetryClient.debug("Dobby has finished his performance!")
 
     def set_face_location(self, x, y):
         self.target_y = y

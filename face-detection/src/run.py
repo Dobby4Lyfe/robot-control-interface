@@ -1,71 +1,74 @@
 #! /usr/bin/python
-from ast import While
-import json
 import time
 import threading
 import queue
-from typing import Dict
 
-from config import Config, config
+from config import config
 from messaging.contracts import gestureRequestMessage, servoMovementMessage
 from messaging.mqtt import MqttClient
 from messaging.telemetry import TelemetryClient
-from stateMachine import Dobby
+from dobby import Dobby
 from faceProcessing.faceDetection import face_seek
 
-# Pi Camera
-# If you are using the Pi Camera, then set this to True
-USE_PI_CAMERA = False
-PROCESS = True
+
+COMPONENT = 'dobby-control'
 
 
-def start_face_detection(image_queue: queue.Queue):
+def start_face_detection(process_queue: queue.Queue):
 
     detection_thread = threading.Thread(
-        target=face_seek, args=([image_queue, config, USE_PI_CAMERA]), daemon=True)
+        target=face_seek,
+        args=([process_queue, config, config.USE_PI_CAMERA]),
+        daemon=True)
+
     detection_thread.start()
     return detection_thread
 
-def process_control(msg: Dict):
-    global PROCESS
-    PROCESS = bool(msg['process'])
-    global config
-    config.SEND_FRAME_FREQUENCY = int(msg['sendFrames'])
-
-mqtt_client = MqttClient('dobby-control', config)
-telemetry = TelemetryClient(mqtt_client, 'dobby-control')
-dobby = Dobby(telemetry)
-
-imageQueue = queue.Queue(1)
-faceDetectionThread = start_face_detection(imageQueue)
-
-mqtt_client.subscribe('/face-detection/control/process', process_control)
 
 def process_gesture(msg: gestureRequestMessage):
-    #print(json.dumps(msg.__dict__))
-    # Creating a bug with queue size 1
-    imageQueue.put(msg)
+    telemetry.debug(f'Received gesture {msg.gesture_name}')
+    try:
+        image_queue.get(block=False)
+        image_queue.task_done()
+    except queue.Empty:
+        pass
+    finally:
+        image_queue.put(msg)    
 
-mqtt_client.subscribe('/dobby/gesture', process_gesture)
 
+print(f'{COMPONENT} is starting.')
+
+mqtt = MqttClient(COMPONENT, config)
+telemetry = TelemetryClient(mqtt, COMPONENT)
+mqtt.subscribe('/dobby/gesture', process_gesture)
+
+image_queue = queue.Queue(1)
+faceDetectionThread = start_face_detection(image_queue)
+
+dobby = Dobby(telemetry)
+
+PROCESS = True
 while PROCESS:
-    telemetry.debug('Current State: {state}'.format(
-        state=dobby.current_state), "Control Flow")
+    telemetry.debug(f'Current State: {dobby.current_state}', "Control Flow")
     try:
         if not dobby.is_gesturing:
-            queuedMessage = imageQueue.get(True, timeout=1)
-            if isinstance(queuedMessage, tuple):
-                dobby.set_face_location(queuedMessage[0], queuedMessage[1])
-                mqtt_client.publish_message('/servo-control', servoMovementMessage(pan = dobby.target_x,tilt = dobby.target_y, mode= 'servo'))
-                imageQueue.task_done()
-            elif isinstance(queuedMessage, gestureRequestMessage):
-                mqtt_client.publish_message('/servo-gesture',queuedMessage)
-                dobby.set_gesturing(queuedMessage)
+            queued_message = image_queue.get(True, timeout=1)
+            if isinstance(queued_message, tuple):
+                dobby.set_face_location(queued_message[0], queued_message[1])
+                
+                mqtt.publish_message('/servo-control', servoMovementMessage(
+                    pan=dobby.target_x, tilt=dobby.target_y, mode='servo'))
+            elif isinstance(queued_message, gestureRequestMessage):
+                mqtt.publish_message('/servo-gesture', queued_message)
+
+                dobby.set_gesturing(queued_message)
             else:
                 dobby.set_no_face()
+
+            image_queue.task_done()
         else:
-            time.sleep(.5)
-    except (queue.Empty):
+            time.sleep(.25)
+    except queue.Empty:
         dobby.set_no_face()
 
-print('Stop Processing')
+telemetry.debug("Exiting gracefully", "Control Flow")
