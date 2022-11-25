@@ -1,3 +1,5 @@
+from ast import Dict
+import json
 from .mqtt import MqttClient
 
 class TelemetryClient():
@@ -8,3 +10,6 @@ class TelemetryClient():
     def debug(self, message: str, category = "Unknown"):
         self.mqtt.publish_debug('[Debug] ' + message, self.component, category)
         print(message)
+
+    def publish(self, payload: Dict):
+        self.mqtt.publish(f'/debug/{self.component}', payload=json.dumps(payload))
