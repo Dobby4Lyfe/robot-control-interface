@@ -12,6 +12,7 @@ topic_bounding_box_centre_x = "FaceCoords/BoundingBoxCentre_x"
 topic_bounding_box_centre_y = "FaceCoords/BoundingBoxCentre_y"
 
 
+
 class MqttClient(mqtt_client.Client):
 
     def on_connect(self, client, userdata, flags, rc):
@@ -85,10 +86,10 @@ class MqttClient(mqtt_client.Client):
         
 
     def on_message(self, client, userdata, msg):
-        print(msg.topic + " " + msg.payload.decode())
+        # print(msg.topic + " " + msg.payload.decode())
         try:
             payload = json.loads(msg.payload)
-        except Exception as e:
+        except Exception as ex:
             print(ex)
             payload = {
                 "topic": msg.topic,
@@ -101,7 +102,7 @@ class MqttClient(mqtt_client.Client):
             payload = servoMovementMessage(**json.loads(msg.payload))
             if ((time.time() - payload.ts) > .5):
                 return
-            print(json.dumps(payload.__dict__, indent=2))
+            # print(json.dumps(payload.__dict__, indent=2))
 
         if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
             payload = gestureRequestMessage(**json.loads(msg.payload))

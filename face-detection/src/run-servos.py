@@ -6,6 +6,7 @@
 #  tilt ID=3  limitset 350 -500- 600   (offset +30)
 # rotate ID=2  limitset 389 -500- 622   (offset +60)
 
+from ast import Dict
 import time
 from messaging.mqtt import MqttClient
 from messaging.contracts import gestureRequestMessage, servoMovementMessage
@@ -14,13 +15,15 @@ import json
 import serial
 from lewansoul_lx16a import ServoController, Servo
 
+from messaging.telemetry import TelemetryClient
+
 SERIAL_PORT = '/dev/ttyUSB0'
 
 controller = ServoController(
     serial.Serial(SERIAL_PORT, 115200, timeout=1),
 )
 
-dobby = MqttClient('dobby-servos', config)
+mqtt_client = MqttClient('dobby-servos', config)
 
 global name, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last
 global mode
@@ -50,10 +53,11 @@ def prepare_movement(servo: Servo, destination: int, threshold: int = 5):
     distance = servo.get_position() - destination
     if distance < 0:
         distance = distance * - 1
-    speed = distance * 6
+    speed = distance * 4
     if distance > threshold:
         print(f'Moving {distance} steps in {speed}ms')
         servo.move_prepare(destination, speed)
+        return speed
 
 
 def servo_move_destination(payload: servoMovementMessage):
@@ -61,15 +65,17 @@ def servo_move_destination(payload: servoMovementMessage):
     print(f'Age of message is {time.time() - payload.ts}')
     pan = 1000 - ((payload.pan * 2 - 500) * .25 + 500)
     tilt = 1000 - ((payload.tilt * 2 - 500) * .3 + 500)
-    print(f'Raw pan position {payload.pan} mapped to {pan}')
-    print(f'Raw pan position {payload.tilt} mapped to {tilt}')
+    #print(f'Raw pan position {payload.pan} mapped to {pan}')
+    #print(f'Raw pan position {payload.tilt} mapped to {tilt}')
     # pan = 1000 - int((payload.pan) * 2)  # 0 to 800 pixels = 165 to 840 counts
     # tilt = int((payload.tilt)*.3)  # 0 to 600 pixels = 350 to 600 counts
     # rotate = payload.rotate
-    prepare_movement(pan_servo, pan, 30)
-    prepare_movement(tilt_servo, tilt, 10)
+    panTime: float = prepare_movement(pan_servo, pan, 30) or 0
+    tiltTime: float = prepare_movement(tilt_servo, tilt, 10) or 0
     controller.move_start()
-    time.sleep(.1)
+    movementTime = (panTime if panTime > tiltTime else tiltTime)/1000
+    print(f'Movement Time: {movementTime}')
+    time.sleep(movementTime * 0.9)
 
 
 def servo_move_incremental(payload: servoMovementMessage):
@@ -145,23 +151,35 @@ def mode_payload(payload: servoMovementMessage):
     else:
         raise ValueError(payload.mode)
 
+
 servo_move_home()
 
-dobby.subscribe('/servo-control', mode_payload)
-dobby.subscribe('/servo-gesture', run_gesture)
+mqtt_client.subscribe('/servo-control', mode_payload)
+mqtt_client.subscribe('/servo-gesture', run_gesture)
+
+telemetry = TelemetryClient(mqtt_client, "servo-controller")
 
 time.sleep(3)
 
+
 def printLocations():
-    time.sleep(0.1)
-    pan_last = pan_servo.get_position()
     time.sleep(0.05)
-    tilt_last = tilt_servo.get_position()
+    pan = pan_servo.get_position()
     time.sleep(0.05)
-    rotate_last = rotate_servo.get_position()
-    print(f'tilt: {tilt_last} \n pan: {pan_last} \n rotate: {rotate_last}\n')
+    tilt = tilt_servo.get_position()
+    time.sleep(0.05)
+    rotate = rotate_servo.get_position()
+    payload = {
+        "ts": time.time(),
+        "pan": pan,
+        "tilt": tilt,
+        "rotate": rotate
+    }
+    telemetry.publish(payload)
+
 
 while 1:
-#    print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
-    time.sleep(10)
-#    printLocations()
+    #   print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
+    time.sleep(.5)
+    printLocations()
+#

@@ -630,7 +630,7 @@
         "order": 4,
         "width": "6",
         "height": "9",
-        "format": "<h2>Last processed frame</h2>\n<img alt='lastImage' src=\"data:image/jpeg;base64,{{msg.payload}}\"></img>\n<p style='italics'>Callum is testing this out, but no one else's branch has this feature. I'll work out how we can manage privacy before I share the code with anyone.</p>",
+        "format": "<h2>Last processed frame</h2>\n<img alt='lastImage' src=\"data:image/jpeg;base64,{{msg.payload}}\"></img>",
         "storeOutMessages": true,
         "fwdInMessages": true,
         "resendOnRefresh": true,
@@ -899,40 +899,6 @@
         ]
     },
     {
-        "id": "e6eb028630ff95a3",
-        "type": "debug",
-        "z": "79285b2d3137a49f",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload.category",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1420,
-        "y": 560,
-        "wires": []
-    },
-    {
-        "id": "d6e2314602c4c08c",
-        "type": "debug",
-        "z": "79285b2d3137a49f",
-        "name": "debug 4",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1020,
-        "y": 380,
-        "wires": []
-    },
-    {
         "id": "9de8961616802f4d",
         "type": "rbe",
         "z": "79285b2d3137a49f",
@@ -948,8 +914,7 @@
         "y": 500,
         "wires": [
             [
-                "b141108ad1eb4dc4",
-                "d6e2314602c4c08c"
+                "b141108ad1eb4dc4"
             ]
         ]
     },
@@ -969,7 +934,6 @@
         "wires": [
             [
                 "b141108ad1eb4dc4",
-                "e6eb028630ff95a3",
                 "0af88e89196f5e6d"
             ]
         ]

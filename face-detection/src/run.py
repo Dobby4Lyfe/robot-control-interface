@@ -36,24 +36,24 @@ mqtt_client = MqttClient('dobby-control', config)
 telemetry = TelemetryClient(mqtt_client, 'dobby-control')
 dobby = Dobby(telemetry)
 
-imageQueue = queue.Queue(2)
+imageQueue = queue.Queue(1)
 faceDetectionThread = start_face_detection(imageQueue)
 
 mqtt_client.subscribe('/face-detection/control/process', process_control)
 
 def process_gesture(msg: gestureRequestMessage):
-    print(json.dumps(msg.__dict__))
+    #print(json.dumps(msg.__dict__))
+    # Creating a bug with queue size 1
     imageQueue.put(msg)
 
 mqtt_client.subscribe('/dobby/gesture', process_gesture)
 
 while PROCESS:
-    time.sleep(.5)
     telemetry.debug('Current State: {state}'.format(
         state=dobby.current_state), "Control Flow")
     try:
-        if imageQueue.not_empty and not dobby.is_gesturing:
-            queuedMessage = imageQueue.get(True, timeout=0.1)
+        if not dobby.is_gesturing:
+            queuedMessage = imageQueue.get(True, timeout=1)
             if isinstance(queuedMessage, tuple):
                 dobby.set_face_location(queuedMessage[0], queuedMessage[1])
                 mqtt_client.publish_message('/servo-control', servoMovementMessage(pan = dobby.target_x,tilt = dobby.target_y, mode= 'servo'))
@@ -63,6 +63,8 @@ while PROCESS:
                 dobby.set_gesturing(queuedMessage)
             else:
                 dobby.set_no_face()
+        else:
+            time.sleep(.5)
     except (queue.Empty):
         dobby.set_no_face()
 

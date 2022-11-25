@@ -26,7 +26,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
     telemetry = TelemetryClient(mqttClient, "Face Detection")
 
     telemetry.debug('Opening camera', "Face Detection Debug")
-    video_stream = VideoStream(usePiCamera=usePiCamera, resolution=[320, 240], framerate=config.MAX_FPS).start()
+    video_stream = VideoStream(usePiCamera=usePiCamera).start()
 
     telemetry.debug('Starting face detection loop...')
     fps.start()
@@ -37,7 +37,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera = True):
         start = time.monotonic()
         frame = video_stream.read()
         frame_count = frame_count + 1
-        # frame = imutils.resize(frame, width=500)
+        #frame = imutils.resize(frame, width=800, height=200)
         # frame = imutils.resize(frame, width=500)
         # Detect the fce boxes
         boxes = face_recognition.face_locations(frame, number_of_times_to_upsample=0)
