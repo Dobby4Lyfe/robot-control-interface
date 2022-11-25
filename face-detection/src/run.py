@@ -7,7 +7,7 @@ from config import config
 from messaging.contracts import gestureRequestMessage, servoMovementMessage
 from messaging.mqtt import MqttClient
 from messaging.telemetry import TelemetryClient
-from stateMachine import Dobby
+from dobby import Dobby
 from faceProcessing.faceDetection import face_seek
 
 
@@ -29,17 +29,18 @@ def process_gesture(msg: gestureRequestMessage):
     telemetry.debug(f'Received gesture {msg.gesture_name}')
     try:
         image_queue.get(block=False)
-        image_queue.put(msg)
         image_queue.task_done()
-    except queue.Empty as ex:
-        telemetry.error(ex)
+    except queue.Empty:
+        pass
+    finally:
+        image_queue.put(msg)    
 
 
 print(f'{COMPONENT} is starting.')
 
-mqtt_client = MqttClient(COMPONENT, config)
-telemetry = TelemetryClient(mqtt_client, COMPONENT)
-mqtt_client.subscribe('/dobby/gesture', process_gesture)
+mqtt = MqttClient(COMPONENT, config)
+telemetry = TelemetryClient(mqtt, COMPONENT)
+mqtt.subscribe('/dobby/gesture', process_gesture)
 
 image_queue = queue.Queue(1)
 faceDetectionThread = start_face_detection(image_queue)
@@ -53,19 +54,18 @@ while PROCESS:
         if not dobby.is_gesturing:
             queued_message = image_queue.get(True, timeout=1)
             if isinstance(queued_message, tuple):
-                dobby.set_face_location(
-                    queued_message[0], queued_message[1])
-                mqtt_client.publish_message('/servo-control', servoMovementMessage(
+                dobby.set_face_location(queued_message[0], queued_message[1])
+                
+                mqtt.publish_message('/servo-control', servoMovementMessage(
                     pan=dobby.target_x, tilt=dobby.target_y, mode='servo'))
-
-                image_queue.task_done()
             elif isinstance(queued_message, gestureRequestMessage):
-                mqtt_client.publish_message(
-                    '/servo-gesture', queued_message)
+                mqtt.publish_message('/servo-gesture', queued_message)
 
                 dobby.set_gesturing(queued_message)
             else:
                 dobby.set_no_face()
+
+            image_queue.task_done()
         else:
             time.sleep(.25)
     except queue.Empty:
