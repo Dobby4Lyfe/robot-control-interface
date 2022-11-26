@@ -15,9 +15,7 @@ controller = ServoController(
     serial.Serial(SERIAL_PORT, 115200, timeout=1),
 )
 
-mqtt_client = MqttClient('dobby-servos', config)
-
-global name, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last
+global name, pan, tilt, rotate, delay, pan_last, tilt_last, rotate_last, movement_id
 global mode
 pan = 500
 tilt = 500
@@ -33,12 +31,13 @@ pan_servo = controller.servo(1)
 rotate_servo = controller.servo(2)
 tilt_servo = controller.servo(3)
 
+mqtt_client = MqttClient('dobby-servos', config)
+telemetry = TelemetryClient(mqtt_client, "servo-controller")
 
-def servo_move_home():
-    # set servos to home position
-    pan_servo.move(500, 1000)
-    tilt_servo.move(500, 1000)
-    rotate_servo.move(500, 1000)
+telemetry.debug("Moving to home position","Servo Movement")
+pan_servo.move(500, 1000)
+tilt_servo.move(500, 1000)
+rotate_servo.move(500, 1000)
 
 def printLocations():
     global telemetry
@@ -51,51 +50,56 @@ def printLocations():
     telemetry.publish(payload)
 
 
-def prepare_movement(servo: Servo, destination: int, threshold: int = 5):
-    global telemetry
-
-    # Smaller == faster
-    SPEED_FACTOR = 4
-
+def calculate_distance(servo: Servo, destination: int) -> int:
     # Calculate the steps we need to traverse, always as a positive number
     distance = servo.get_position() - destination
     distance = distance if distance > 0 else distance * -1
-
-    if distance > threshold:
-        # Calculate the duration to spend on this movement and prepare it
-        speed = distance * SPEED_FACTOR
-        servo.move_prepare(destination, speed)
-        
-        telemetry.debug(f'Moving {distance} steps in {speed}ms',
-                        f'Servo Id:{servo.__dict__["servo_id"]}')
-        return speed
+    return int(distance)
 
 
-def move_to_destination(msg: servoMovementMessage):
-    global mode, pan, tilt, rotate, pan_servo, rotate_servo, tilt_servo, telemetry
-
+def move_to_destination(msg: servoMovementMessage) -> None:
+    global mode, pan_servo, rotate_servo, tilt_servo, telemetry
+    
     telemetry.debug(
-        f'Processing movement command - pan: {msg.pan} tilt: {msg.tilt} rotate: {msg.rotate}. Message age: {time.time() - msg.ts}ms', "Servo Movement")
+        f'Processing movement command - pan: {msg.pan} tilt: {msg.tilt} rotate: {msg.rotate}. Message age: {((time.time() - msg.ts) * 1000):.0f}ms', "Servo Movement")
 
     # Calculate the position to look from the centre position of 500x500y, always a positive number
-    pan = 1000 - ((msg.pan * 2 - 500) * .25 + 500)
-    tilt = 1000 - ((msg.tilt * 2 - 500) * .3 + 500)
+    # Maximum range - ((requested value * scale from video pixels to steps - as an offset from centre) * proportion of the movement range we want to use + centre position)
+    pan_destination = 1000 - ((msg.pan * 2 - 500) * .25 + 500)
+    tilt_destination = 1000 - ((msg.tilt * 1.5 - 500) * .3 + 500)
 
-    # Prepare the movements, including providing the 'dead-zone' for each
-    # servo to prevent stuttering and micro movements
-    pan_time: float = prepare_movement(pan_servo, pan, 30) or 0
-    tilt_time: float = prepare_movement(tilt_servo, tilt, 10) or 0
+    # Calculate how far each servo must move
+    pan_distance = calculate_distance(pan_servo, pan_destination)
+    tilt_distance = calculate_distance(tilt_servo, tilt_destination)
 
-    # Get the longest movement and convert from ms to seconds
-    movement_time = (pan_time if pan_time > tilt_time else tilt_time) / 1000
+    # Get the larger of the two distances
+    furthest_distance = max(pan_distance, tilt_distance)
+
+    # This is the number of milliseconds we will spend on each servo step
+    # Smaller == faster
+    SPEED_FACTOR = 5
+    movement_time = int(furthest_distance * SPEED_FACTOR)
+
+    # Prepare the servos to move, if they need to move far enough
+    MINIMUM_PAN_DISTANCE = 40
+    if (pan_distance > MINIMUM_PAN_DISTANCE):
+        pan_servo.move_prepare(pan_destination, movement_time)
+        telemetry.debug(
+            f'Moving {pan_distance} steps in {movement_time}ms', "Servo Pan   ↔️ ")
+ 
+    MINIMUM_TILT_DISTANCE = 15
+    if (tilt_distance > MINIMUM_TILT_DISTANCE):
+        tilt_servo.move_prepare(tilt_destination, movement_time)
+        telemetry.debug(
+            f'Moving {tilt_distance} steps in {movement_time}ms', "Servo Tilt  ↕️ ")
 
     # Begin the movement
     controller.move_start()
 
-    telemetry.debug(f'Movement Time: {movement_time}', 'Servo Movement')
-
     # Sleep while movement occurs, but allow interuption in the last tenth
-    time.sleep(movement_time * 0.9)
+    time.sleep((movement_time / 1000))
+    
+    telemetry.debug(f'Movement Complete', 'Servo Movement')
 
 
 def gesture_movement(msg: gestureRequestMessage):  # executed on phrase/ topic change
@@ -156,16 +160,8 @@ def mode_payload(payload: servoMovementMessage):
         raise ValueError(payload.mode)
 
 
-servo_move_home()
-
 mqtt_client.subscribe('/servo-control', mode_payload)
 mqtt_client.subscribe('/servo-gesture', gesture_movement)
-
-telemetry = TelemetryClient(mqtt_client, "servo-controller")
-
-
-
-
 
 while 1:
     #   print("mode : ", mode,"   pan : ", pan,"Tilt : ", tilt, "rotate : ", rotate,"delay : " ,delay)
