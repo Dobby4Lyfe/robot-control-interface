@@ -100,7 +100,7 @@ class MqttClient(mqtt_client.Client):
 
         if msg.topic == '/servo-control':
             payload = servoMovementMessage(**json.loads(msg.payload))
-            if ((time.time() - payload.ts) > .5):
+            if ((time.time() - payload.ts) > .2):
                 return
 
         if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
