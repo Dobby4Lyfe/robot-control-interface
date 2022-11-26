@@ -33,7 +33,7 @@ def process_gesture(msg: gestureRequestMessage):
     except queue.Empty:
         pass
     finally:
-        image_queue.put(msg)    
+        image_queue.put(msg)
 
 
 print(f'{COMPONENT} is starting.')
