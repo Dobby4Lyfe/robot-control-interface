@@ -11,6 +11,7 @@ services:
       - node-red-net
     volumes:
       - ./data/node-red:/data
+    restart: always
   mqtt:
     image: eclipse-mosquitto:latest
     environment:
@@ -21,6 +22,7 @@ services:
       - "1883:1883"
     volumes:
       - ./data/mosquitto:/mosquitto
+    restart: always
   face-detection:
     image: callumb/robot-face-detection:latest
     devices:
@@ -29,11 +31,13 @@ services:
       - .env
     networks:
       - node-red-net
+    restart: always
   servo-control:
     image: callumb/robot-face-detection:latest
     # When available, we'll need to mount /dev/usbTTY0
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
+    restart: always
     env_file:
       - .env
     networks:

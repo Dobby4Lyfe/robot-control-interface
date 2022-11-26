@@ -33,7 +33,7 @@ def face_seek(imageQueue: queue.Queue, config: Config, usePiCamera=True):
         telemetry = TelemetryClient(mqtt, "Face Detection")
 
         telemetry.debug('Opening camera', "Control")
-        video_stream = VideoStream(usePiCamera=usePiCamera).start()
+        video_stream = VideoStream(usePiCamera=False).start()
 
         telemetry.debug('Starting face detection loop', "Control")
         fps.start()

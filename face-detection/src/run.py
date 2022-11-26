@@ -17,6 +17,7 @@ global continue_process, telemetry, faceDetectionThread
 
 
 def start_face_detection(process_queue: queue.Queue):
+    
     detection_thread = threading.Thread(
         target=face_seek,
         args=([process_queue, config, config.USE_PI_CAMERA]),

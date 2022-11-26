@@ -1,1 +1,1 @@
-docker build -t callumb/robot-face-detection:latest .
+docker build -t callumb/robot-face-detection:local .

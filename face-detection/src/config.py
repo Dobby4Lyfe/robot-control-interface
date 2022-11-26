@@ -16,6 +16,7 @@ class Config():
         self.USE_PI_CAMERA = self.get_required('USE_PI_CAMERA', bool, False)
         self.MAX_FPS = self.get('MAX_FPS', int, 4)
         self.SEND_FRAME_FREQUENCY = self.get('SEND_FRAME_FREQUENCY', int, 2)
+        self.REQUIRE_FACE_DETECTION = self.get('REQUIRE_FACE_DETECTION', bool, True)
 
     def get(self, env_name, T: TypeVar = str, default_value: Any = None):
         var = os.getenv(env_name, default_value)
