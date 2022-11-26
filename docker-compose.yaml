@@ -32,8 +32,8 @@ services:
   servo-control:
     image: callumb/robot-face-detection:latest
     # When available, we'll need to mount /dev/usbTTY0
-    #devices:
-    #  - /dev/usbTTY0:/dev/usbTTY0
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
     env_file:
       - .env
     networks:
