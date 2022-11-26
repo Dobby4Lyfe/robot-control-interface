@@ -21,6 +21,10 @@ class MqttClient(mqtt_client.Client):
         else:
             print(f"Failed to connect as {self.client_id}, return code {rc}")
 
+    def on_disconnect(self, client: mqtt_client, userdata, flags):
+        self.client.loop_stop()
+        print ("disconnected from MQTT")
+
     def __init__(self, client_id, config: Config) -> None:
 
         # Settings for client
@@ -37,6 +41,7 @@ class MqttClient(mqtt_client.Client):
 
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.client.on_disconnect =  self.on_disconnect
 
         self.client.connect(config.MQTT_HOST, config.MQTT_PORT)
         self.client.loop_start()

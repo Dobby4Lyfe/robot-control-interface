@@ -14,8 +14,9 @@ class TelemetryClient():
         print(f'{Fore.BLUE + Style.DIM}[Debug] {category}: {message} {Style.RESET_ALL}')
 
     def error(self, message: str, category="Unknown"):
+        if isinstance(message, Exception): message = str(message)
         self.mqtt.publish_debug(message, self.component, category, "Error")
-        print(f'{Fore.RED + Style.DIM}[Error] {category}: {message} {Style.RESET_ALL}')
+        print(f'{Fore.RED}[Error] {category}: {message} {Style.RESET_ALL}')
 
     def publish(self, payload: Dict):
         self.mqtt.publish(f'/debug/{self.component}',

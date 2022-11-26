@@ -1,4 +1,5 @@
 #! /usr/bin/python
+import sys
 import time
 import threading
 import queue
@@ -12,10 +13,10 @@ from faceProcessing.faceDetection import face_seek
 
 
 COMPONENT = 'dobby-control'
+global continue_process, telemetry, faceDetectionThread
 
 
 def start_face_detection(process_queue: queue.Queue):
-
     detection_thread = threading.Thread(
         target=face_seek,
         args=([process_queue, config, config.USE_PI_CAMERA]),
@@ -36,6 +37,18 @@ def process_gesture(msg: gestureRequestMessage):
         image_queue.put(msg)
 
 
+def check_health():
+    global faceDetectionThread, telemetry, continue_process
+    if not faceDetectionThread.is_alive():
+        telemetry.error(
+            "Face detection not running, attempting restart", "Dobby State")
+        faceDetectionThread = start_face_detection(image_queue)
+        time.sleep(10)
+        if not faceDetectionThread.is_alive():
+            telemetry.error("Could not restart face detection", "Dobby State")
+            continue_process = False
+
+
 print(f'{COMPONENT} is starting.')
 
 mqtt = MqttClient(COMPONENT, config)
@@ -47,15 +60,15 @@ faceDetectionThread = start_face_detection(image_queue)
 
 dobby = Dobby(telemetry)
 
-PROCESS = True
-while PROCESS:
-    telemetry.debug(f'Current State: {dobby.current_state}', "Control Flow")
+continue_process = True
+while continue_process:
+    telemetry.debug(f'Current state is {dobby.current_state}', "Dobby State")
     try:
         if not dobby.is_gesturing:
             queued_message = image_queue.get(True, timeout=1)
             if isinstance(queued_message, tuple):
                 dobby.set_face_location(queued_message[0], queued_message[1])
-                
+
                 mqtt.publish_message('/servo-control', servoMovementMessage(
                     pan=dobby.target_x, tilt=dobby.target_y, mode='servo'))
             elif isinstance(queued_message, gestureRequestMessage):
@@ -71,4 +84,8 @@ while PROCESS:
     except queue.Empty:
         dobby.set_no_face()
 
+    check_health()
+
+
 telemetry.debug("Exiting gracefully", "Control Flow")
+sys.exit(0)
