@@ -11,7 +11,7 @@ lewansoul-lx16a==0.1
 numpy==1.23.4
 opencv-python==4.6.0.66
 paho-mqtt==1.6.1
-picamera==1.13
+#picamera==1.13
 Pillow==9.3.0
 pyserial==3.5
 PyYAML==6.0
