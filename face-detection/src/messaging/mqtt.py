@@ -93,25 +93,28 @@ class MqttClient(mqtt_client.Client):
 
     def on_message(self, client, userdata, msg):
         try:
-            payload = json.loads(msg.payload)
+            try:
+                payload = json.loads(msg.payload)
+            except Exception as ex:
+                print(ex)
+                payload = {
+                    "topic": msg.topic,
+                    "payload": msg.payload.decode()
+                }
+            
+            
+
+            if msg.topic == '/servo-control':
+                payload = servoMovementMessage(**json.loads(msg.payload))
+                if ((time.time() - payload.ts) > .2):
+                    return
+
+            if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
+                payload = gestureRequestMessage(**json.loads(msg.payload))
+                if ((time.time() - payload.ts) > 2):
+                    return
+
+            if msg.topic in self.callbacks:
+                self.callbacks[msg.topic](payload)
         except Exception as ex:
             print(ex)
-            payload = {
-                "topic": msg.topic,
-                "payload": msg.payload.decode()
-            }
-        
-        
-
-        if msg.topic == '/servo-control':
-            payload = servoMovementMessage(**json.loads(msg.payload))
-            if ((time.time() - payload.ts) > .2):
-                return
-
-        if msg.topic == '/dobby/gesture' or msg.topic == '/servo-gesture':
-            payload = gestureRequestMessage(**json.loads(msg.payload))
-            if ((time.time() - payload.ts) > 2):
-                return
-
-        if msg.topic in self.callbacks:
-            self.callbacks[msg.topic](payload)
