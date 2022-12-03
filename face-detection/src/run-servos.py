@@ -56,17 +56,8 @@ def calculate_distance(servo: Servo, destination: int) -> int:
     distance = distance if distance > 0 else distance * -1
     return int(distance)
 
-
-def move_to_destination(msg: servoMovementMessage) -> None:
+def run_movement(pan_destination: int, tilt_destination: int, rotate_destination = None):
     global mode, pan_servo, rotate_servo, tilt_servo, telemetry
-    
-    telemetry.debug(
-        f'Processing movement command - pan: {msg.pan} tilt: {msg.tilt} rotate: {msg.rotate}. Message age: {((time.time() - msg.ts) * 1000):.0f}ms', "Servo Movement")
-
-    # Calculate the position to look from the centre position of 500x500y, always a positive number
-    # Maximum range - ((requested value * scale from video pixels to steps - as an offset from centre) * proportion of the movement range we want to use + centre position)
-    pan_destination = 1000 - ((msg.pan * 2 - 500) * .25 + 500)
-    tilt_destination = 1000 - ((msg.tilt * 1.5 - 500) * .3 + 500)
 
     # Calculate how far each servo must move
     pan_distance = calculate_distance(pan_servo, pan_destination)
@@ -98,6 +89,19 @@ def move_to_destination(msg: servoMovementMessage) -> None:
 
     # Sleep while movement occurs, but allow interuption in the last tenth
     time.sleep((movement_time / 1000))
+
+def move_to_destination(msg: servoMovementMessage) -> None:
+    global mode, pan_servo, rotate_servo, tilt_servo, telemetry
+    
+    telemetry.debug(
+        f'Processing movement command - pan: {msg.pan} tilt: {msg.tilt} rotate: {msg.rotate}. Message age: {((time.time() - msg.ts) * 1000):.0f}ms', "Servo Movement")
+
+    # Calculate the position to look from the centre position of 500x500y, always a positive number
+    # Maximum range - ((requested value * scale from video pixels to steps - as an offset from centre) * proportion of the movement range we want to use + centre position)
+    pan_destination = 1000 - ((msg.pan * 2 - 500) * .25 + 500)
+    tilt_destination = 1000 - ((msg.tilt * 1.5 - 500) * .3 + 500)
+
+    run_movement(pan_destination, tilt_destination)
     
     telemetry.debug(f'Movement Complete', 'Servo Movement')
 
@@ -124,31 +128,14 @@ def gesture_movement(msg: gestureRequestMessage):  # executed on phrase/ topic c
     rotate_last = rotate_servo.get_position()
     time.sleep(0.05)
 
-    # Move servo to new position - take current position and add counts from payload, pan,tilt,rotate
-    prepare_movement(pan_servo, int(pan_last+pan))
-    time.sleep(0.05)
-    prepare_movement(tilt_servo, int(tilt_last+tilt))
-    time.sleep(0.05)
-    prepare_movement(rotate_servo, int(rotate_last + rotate))
-    time.sleep(0.05)
-    #rotate_servo.move_prepare(int(rotate_last+rotate), 2000)
-    time.sleep(0.05)
+    pan_destination = pan_last + pan
+    tilt_destination = tilt_last + tilt
 
-    # Begin the movement of the gesture
-    controller.move_start()
+    run_movement(pan_destination, tilt_destination)
 
-    # Sleep for the duration the gesture required
-    time.sleep(delay)
+    time.sleep(1)
 
-    # Prepare the return movement and get the longest movement duration
-    pan_duration: float = prepare_movement(pan_servo, pan_last, 5)
-    tilt_duration: float = prepare_movement(tilt_servo, tilt_last, 5)
-    rotate_duration: float = prepare_movement(rotate_servo, rotate_last, 5)
-    movement_time = max(pan_duration, tilt_duration, rotate_duration)
-
-    # Return to original position and wait for the movement to complete
-    controller.move_start()
-    time.sleep(movement_time)
+    run_movement(pan_last, tilt_last)
 
 
 def mode_payload(payload: servoMovementMessage):
