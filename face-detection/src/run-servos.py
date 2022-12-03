@@ -62,9 +62,15 @@ def run_movement(pan_destination: int, tilt_destination: int, rotate_destination
     # Calculate how far each servo must move
     pan_distance = calculate_distance(pan_servo, pan_destination)
     tilt_distance = calculate_distance(tilt_servo, tilt_destination)
+    
+    rotate_distance = 0
+    if rotate_destination is not None:
+        rotate_distance = calculate_distance(rotate_servo, rotate_destination)
+    else:
+        rotate_distance = 0
 
-    # Get the larger of the two distances
-    furthest_distance = max(pan_distance, tilt_distance)
+    # Get the larger of the distances
+    furthest_distance = max(pan_distance, tilt_distance, rotate_distance or 0)
 
     # This is the number of milliseconds we will spend on each servo step
     # Smaller == faster
@@ -76,13 +82,19 @@ def run_movement(pan_destination: int, tilt_destination: int, rotate_destination
     if (pan_distance > MINIMUM_PAN_DISTANCE):
         pan_servo.move_prepare(pan_destination, movement_time)
         telemetry.debug(
-            f'Moving {pan_distance} steps in {movement_time}ms', "Servo Pan   ↔️ ")
+            f'Moving {pan_distance} steps in {movement_time}ms', "Servo Pan    🔁 ")
  
     MINIMUM_TILT_DISTANCE = 15
     if (tilt_distance > MINIMUM_TILT_DISTANCE):
         tilt_servo.move_prepare(tilt_destination, movement_time)
         telemetry.debug(
-            f'Moving {tilt_distance} steps in {movement_time}ms', "Servo Tilt  ↕️ ")
+            f'Moving {tilt_distance} steps in {movement_time}ms', "Servo Tilt   ↕ ")
+
+    MINIMUM_ROTATE_DISTANCE = 15
+    if (isinstance(rotate_destination,int) and rotate > MINIMUM_ROTATE_DISTANCE):
+        rotate_servo.move_prepare(rotate_destination, movement_time)
+        telemetry.debug(
+            f'Moving {rotate_distance} steps in {movement_time}ms', "Servo Rotate  ↔️ ")
 
     # Begin the movement
     controller.move_start()
@@ -130,12 +142,13 @@ def gesture_movement(msg: gestureRequestMessage):  # executed on phrase/ topic c
 
     pan_destination = pan_last + pan
     tilt_destination = tilt_last + tilt
+    rotate_destination = rotate_last + rotate
 
-    run_movement(pan_destination, tilt_destination)
+    run_movement(pan_destination, tilt_destination, rotate_destination)
 
     time.sleep(1)
 
-    run_movement(pan_last, tilt_last)
+    run_movement(pan_last, tilt_last, rotate_last)
 
 
 def mode_payload(payload: servoMovementMessage):
