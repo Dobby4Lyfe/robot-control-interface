@@ -3,4 +3,4 @@ Up and right,1,50,50,50,nothing.wav,fa-solid fa-play
 Down,2,0,-150,0,nothing.wav,fa-play
 Left,3,-500,0,0,nothing.wav,fa-play
 Right,3,500,0,0,nothing.wav,fa-play
-
+Side to side,3,0,0,150,nothing.wav,fa-play
